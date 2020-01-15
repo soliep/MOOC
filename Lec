@@ -1,0 +1,51 @@
+# Lec9
+# 
+setwd("~/R/MOOC")
+iris <- read.csv(file = "iris.csv")
+head(iris)
+str(iris)
+attach(iris)
+
+set.seed(1000)
+N = nrow(iris)
+tr.idx = sample(1:N, size = N*2/3, replace = FALSE)
+tr.idx
+
+iris.train <- iris[tr.idx, -5]
+iris.test  <- iris[-tr.idx, -5]
+
+trainLabels <- iris[tr.idx, 5]
+testLabels  <- iris[-tr.idx, 5]
+
+library(dplyr)
+sample_n(iris, size = N*2/3, replace = FALSE)
+sample_frac(iris, size = 0.6, replace = FALSE)
+
+# Lec10
+# Classification
+# K-Nearest Neighbour
+
+install.packages("class")
+install.packages("gmodels")
+install.packages("scales")
+library(class)
+library(gmodels)
+library(scales)
+
+md1 <- knn(train = iris.train, test = iris.test, cl = trainLabels, k = 5)
+CrossTable(x = testLabels, y = md1, prop.chisq = FALSE)
+
+# Optimal k selection (1 to n/2)
+accuracy_k <- NULL
+nnum <- nrow(iris.train)/2
+for (kk in c(1:nnum)) {
+  set.seed(1234)
+  knn_k <- knn(train = iris.train, test = iris.test, cl = trainLabels, k = kk)
+  accuracy_k <- c(accuracy_k, sum(knn_k == testLabels)/length(testLabels))
+}
+
+test_k <- data.frame(k = c(1:nnum), accuracy = accuracy_k[c(1:nnum)])
+plot(formula = accuracy ~ k, data = test_k, type = "o", ylim = c(0.5, 1), pch = 20, col = 3)
+with(test_k, text(accuracy ~ k, labels = k, pos = 1, cex = 0.7))
+
+min(test_k[test_k$accuracy %in% max(accuracy_k), "k"])
