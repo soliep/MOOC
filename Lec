@@ -22,8 +22,8 @@ sample_n(iris, size = N*2/3, replace = FALSE)
 sample_frac(iris, size = 0.6, replace = FALSE)
 
 
-#########################################################################################################
 
+#############################################################################################################################
 # Lec10
 # Classification
 # K-Nearest Neighbour
@@ -43,7 +43,7 @@ str(iris)
 attach(iris)
 
 # Data Sampling
-set.seed(1000)
+set.seed(1000, sample.kind = "Rounding")
 N = nrow(iris)
 tr.idx = sample(1:N, size = N*2/3, replace = FALSE)
 tr.idx
@@ -130,3 +130,74 @@ md3_fit <- fitted(md3)
 md3_fit
 CrossTable(x = testLabels, y = md3_fit,
            prop.chisq = FALSE, prop.c = FALSE)
+
+
+# Lec10
+# Classification
+# Discriminant Analysis
+
+
+# 10.3
+setwd("D:/R/MOOC/week10")
+iris <- read.csv(file = "iris.csv")
+attach(iris)
+
+set.seed(1000, sample.kind = "Rounding")
+N = nrow(iris)
+tr.idx = sample(1:N, size = N*2/3, replace = FALSE)
+
+iris.train <- iris[tr.idx, -5]
+iris.test  <- iris[-tr.idx, -5]
+
+trainLabels <- iris[tr.idx, 5]
+testLabels  <- iris[-tr.idx, 5]
+
+train<-iris[tr.idx,]
+test<-iris[-tr.idx,]
+
+# Linear Discriminant Analysis (LDA) with training data
+install.packages("MASS")
+library(MASS)
+iris.lda <- lda(Species ~ ., data = train, prior = c(1/3, 1/3, 1/3))
+iris.lda
+
+# Predict test data set n = 50
+testpred <- predict(iris.lda, test)
+testpred
+
+library(gmodels)
+CrossTable(x = testLabels, y = testpred$class, prop.chisq = FALSE)
+
+# Quiz
+iris.lda2 <- lda(Species ~ ., data = train, prior = c(1/2, 1/4, 1/4))
+iris.lda2
+testpred2 <- predict(iris.lda2, test)
+CrossTable(x = testLabels, y = testpred2$class, prop.chisq = FALSE)
+install.packages("tidyr")
+library(dplyr)
+round(testpred2$posterior,2)
+
+
+# 10.4
+# 등분산 검정 (모집단의 분산-공분산 행렬이 동일한지 테스트)
+install.packages("biotools")
+library(biotools)
+boxM(iris[1:4], iris$Species) # 귀무가설 기각 -> 등분산 아님 -> QDA
+
+# Quadratic D Analysis
+iris.qda <- qda(Species ~ ., data = train, prior = c(1/3, 1/3, 1/3))
+iris.qda
+
+testpredq <- predict(iris.qda, test)
+testpredq
+
+CrossTable(x = testLabels, y = testpredq$class, prop.chisq = FALSE)
+
+# Partition Plot
+install.packages("klaR")
+library(klaR)
+partimat(as.factor(iris$Species) ~ ., data = iris, method = "lda")
+partimat(as.factor(iris$Species) ~ ., data = iris, method = "qda")
+
+
+#########################################################################################################################
